@@ -1,52 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>QuickEats - Home</title>
-  <link rel="stylesheet" href="fstyle.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuickEats — Home</title>
+  <link rel="stylesheet" href="fstyle.css" />
 </head>
 <body>
-  <header>
-    <h1>🍴 QuickEats</h1>
-    <div class="header-right">
-      <select id="location-select">
-        <option value="">Select Location</option>
+  <header class="topbar">
+    <div class="brand"> QuickEats</div>
+
+    <div class="controls">
+      <select id="locationSelect" title="Choose location">
+        <option value="">Choose location</option>
         <option value="Akurdi">Akurdi</option>
         <option value="Bhel Chowk">Bhel Chowk</option>
         <option value="Shree Nagar">Shree Nagar</option>
         <option value="Nagpur">Nagpur</option>
       </select>
-      <input type="text" id="custom-location" placeholder="Enter custom location">
-      <button id="set-location-btn">Set Location</button>
-      <input type="text" id="searchInput" placeholder="Search food...">
-      <button id="cart-btn">🛒 Cart (<span id="cart-count">0</span>)</button>
+
+      <input id="customLocation" placeholder="Or type location (e.g., My Street)" />
+      <button id="setLocationBtn">Set</button>
+
+      <input id="searchBox" placeholder="Search restaurants or dishes..." />
+      <button id="logoutBtn" class="small">Logout</button>
+
+      <button id="cartToggle" class="cart-btn">🛒 <span id="cartCount">0</span></button>
     </div>
   </header>
 
-  <main>
-    <h2 id="welcome-text"></h2>
-    <h3 id="restaurant-title">Restaurants Near You</h3>
-    <div id="restaurant-list" class="restaurant-grid"></div>
+  <main class="main">
+    <section class="welcome">
+      <h1 id="welcomeText">Hi there! Choose a location to see restaurants ✨</h1>
+      <p class="muted">Colorful menus, ratings, coupons & a fun checkout — try it out!</p>
+    </section>
 
-    <div id="food-section" style="display:none;">
-      <h3>Menu</h3>
-      <div id="menu" class="menu"></div>
-    </div>
+    <section id="restaurantGrid" class="grid"></section>
   </main>
 
-  <div class="cart" id="cart">
-    <h2>Your Cart</h2>
-    <ul id="cart-items"></ul>
-    <p>Total: ₹<span id="total-price">0</span></p>
-    <input type="text" id="coupon" placeholder="Enter Coupon (e.g., SAVE20)">
-    <button id="apply-coupon">Apply Coupon</button>
-    <button id="checkout-btn">Checkout</button>
+  <!-- Cart Drawer -->
+  <aside id="cartDrawer" class="cart-drawer">
+    <div class="cart-header">
+      <h3>Your Cart</h3>
+      <button id="closeCart">✕</button>
+    </div>
+
+    <div id="cartItems" class="cart-items"></div>
+
+    <div class="cart-summary">
+      <div>Subtotal: <strong>₹<span id="subTotal">0</span></strong></div>
+      <div>Delivery: <strong>₹<span id="deliveryFee">0</span></strong></div>
+      <div>Discount: <strong>-₹<span id="discountVal">0</span></strong></div>
+      <hr/>
+      <div class="total">Total: ₹<span id="grandTotal">0</span></div>
+
+      <input id="couponInput" placeholder="Coupon (FOOD10, WELCOME15, FREESHIP)" />
+      <div class="cart-actions">
+        <button id="applyCouponBtn">Apply Coupon</button>
+        <button id="checkoutBtn" class="primary">Checkout</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Payment Modal -->
+  <div id="paymentModal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Payment</h3>
+      <div id="paymentSummary"></div>
+      <div class="modal-actions">
+        <button id="cancelPay">Cancel</button>
+        <button id="confirmPay" class="primary">Pay Now</button>
+      </div>
+    </div>
   </div>
 
-  <footer>
-    <p>© 2025 QuickEats | Fresh food at your doorstep</p>
+  <footer class="footer">
+    <p>Made with ❤️ — QuickEats Demo</p>
   </footer>
 
   <script src="fscript.js"></script>
 </body>
 </html>
+
