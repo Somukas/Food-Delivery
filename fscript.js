@@ -1,4 +1,4 @@
-/* ---------- Data & Persistence Keys ---------- */
+/* ---------- Storage keys ---------- */
 const STORAGE = {
   USER: "qe_user",
   CART: "qe_cart",
@@ -7,7 +7,7 @@ const STORAGE = {
   COUPON: "qe_coupon"
 };
 
-/* ---------- Sample restaurants with branches (locations + distance km) ---------- */
+/* ---------- Sample data ---------- */
 const RESTAURANTS = [
   {
     id: "burger-hub",
@@ -55,94 +55,84 @@ const RESTAURANTS = [
   }
 ];
 
-/* ---------- Utility helpers ---------- */
+/* ---------- simple helpers ---------- */
 const $ = id => document.getElementById(id);
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 const load = k => JSON.parse(localStorage.getItem(k) || "null");
 
-/* ---------- Auth (login.html) ---------- */
+/* ---------- Auth Functions (login.html) ---------- */
 function login(){
   const user = $("username") ? $("username").value.trim() : null;
   const pass = $("password") ? $("password").value.trim() : null;
   if(!user || !pass){ if($("loginMsg")) $("loginMsg").textContent = "Enter credentials"; return; }
 
-  // demo auth: admin / 1234
   if(user === "admin" && pass === "1234"){
     save(STORAGE.USER, { name: user });
-    // preserve empty cart
     if(!load(STORAGE.CART)) save(STORAGE.CART, []);
-    window.location.href = "index.html";
+    location.href = "index.html";
   } else {
     if($("loginMsg")) $("loginMsg").textContent = "Invalid credentials — use admin / 1234";
   }
 }
 
-/* ---------- On index load: initialize UI ---------- */
+/* ---------- Init on index load ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-  // redirect to login if not signed in
   const user = load(STORAGE.USER);
-  if(!user && location.pathname.endsWith("index.html")){
+  // redirect to login if not logged in
+  if(!user && location.pathname.endsWith("index.html")) {
     location.href = "login.html";
     return;
   }
-  // bind controls
-  bindTopControls();
+  // Bind top controls if present
+  if($("setLocationBtn")) bindTopControls();
   renderWelcome();
   renderRestaurants();
   restoreCart();
   bindCartButtons();
 });
 
-/* ---------- Topbar controls ---------- */
+/* ---------- Topbar control bindings ---------- */
 function bindTopControls(){
-  // location set
   $("setLocationBtn").addEventListener("click", () => {
     const chosen = $("locationSelect").value;
     const custom = $("customLocation").value.trim();
     const final = custom || chosen;
     if(!final){ alert("Choose or enter a location"); return; }
     save(STORAGE.LOCATION, final);
+    $("customLocation").value = "";
     renderWelcome();
     renderRestaurants();
-    $("customLocation").value = "";
   });
 
-  // logout
   $("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE.USER);
-    // keep cart optionally — for demo we'll clear
     localStorage.removeItem(STORAGE.CART);
     location.href = "login.html";
   });
 
-  // search
   $("searchBox").addEventListener("input", e => renderRestaurants(e.target.value.trim().toLowerCase()));
 
-  // cart toggle
-  $("cartToggle").addEventListener("click", () => {
-    $("cartDrawer").classList.toggle("open");
-  });
+  $("cartToggle").addEventListener("click", () => $("cartDrawer").classList.toggle("open"));
 }
 
-/* ---------- Welcome text ---------- */
+/* ---------- Welcome ---------- */
 function renderWelcome(){
   const user = load(STORAGE.USER);
   const loc = load(STORAGE.LOCATION) || "No location set";
-  $("welcomeText").textContent = user ? `Hello ${user.name}! Location: ${loc}` : `Hello! Location: ${loc}`;
+  if($("welcomeText")) $("welcomeText").textContent = user ? `Hello ${user.name}! Location: ${loc}` : `Hello! Location: ${loc}`;
 }
 
-/* ---------- Restaurants render & search ---------- */
+/* ---------- Render Restaurants (grid) ---------- */
 function renderRestaurants(query = ""){
   const grid = $("restaurantGrid");
+  if(!grid) return;
   grid.innerHTML = "";
-
   const location = load(STORAGE.LOCATION);
   if(!location){
     grid.innerHTML = `<div class="card"><div class="hero">📍</div><h3>Pick a location</h3><p class="muted">Select a location to see nearby branches</p></div>`;
     return;
   }
 
-  // filter restaurants that have a branch at chosen location OR whose name/menu matches query
   const results = RESTAURANTS.filter(r => {
     const hasBranch = r.branches.some(b => b.location.toLowerCase() === location.toLowerCase());
     const matchesQuery = query && (r.name.toLowerCase().includes(query) || r.menu.some(m => m.name.toLowerCase().includes(query)));
@@ -157,47 +147,62 @@ function renderRestaurants(query = ""){
   results.forEach(r => grid.appendChild(makeRestaurantCard(r, location, query)));
 }
 
-/* ---------- Make restaurant card element ---------- */
+/* ---------- Build a single restaurant card ---------- */
 function makeRestaurantCard(r, location, query){
   const card = document.createElement("div");
   card.className = "card";
 
-  // find branch (closest if multiple)
-  const branches = r.branches.filter(b => b.location.toLowerCase() === location.toLowerCase());
-  const branch = branches.length ? branches[0] : r.branches[0];
-
-  // rating (persisted)
+  const branchesAtLoc = r.branches.filter(b => b.location.toLowerCase() === location.toLowerCase());
+  const branch = branchesAtLoc.length ? branchesAtLoc[0] : r.branches[0];
   const ratings = load(STORAGE.RATINGS) || {};
-  const saved = ratings[r.id] !== undefined ? ratings[r.id] : r.rating;
+  const savedRating = ratings[r.id] !== undefined ? ratings[r.id] : r.rating;
 
   card.innerHTML = `
     <div class="hero">${r.hero}</div>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h3>${r.name}</h3>
-      <div class="star-row"><span class="star">★</span> <strong>${saved.toFixed(1)}</strong></div>
+      <div class="star-row"><span class="star">★</span> <strong>${savedRating.toFixed(1)}</strong></div>
     </div>
     <div class="meta">Branch: ${branch.location} • ${branch.distance} km away</div>
-
     <ul class="menu-list">
       ${r.menu
         .filter(m => !query || r.name.toLowerCase().includes(query) || m.name.toLowerCase().includes(query))
-        .map(m => `<li>${m.name} <span>₹${m.price}</span> <button onclick="addToCart('${r.id}','${m.id}')">Add</button></li>`)
+        .map(m => `<li>${m.name} <span>₹${m.price}</span> <button onclick="openMenuModal('${r.id}')">View</button></li>`)
         .join("")}
     </ul>
-
     <div style="display:flex;gap:8px;align-items:center">
       <div id="stars-${r.id}" class="star-rating" style="display:flex;gap:6px"></div>
-      <button class="small" onclick="viewMenu('${r.id}')">View menu</button>
+      <button class="small" onclick="openMenuModal('${r.id}')">Open Menu</button>
     </div>
   `;
 
-  // attach dynamic stars (click to rate)
-  setTimeout(() => { renderStars(r.id, saved); attachStarHandlers(r.id, r.name); }, 0);
+  // render and attach stars
+  setTimeout(() => { renderStars(r.id, savedRating); attachStarHandlers(r.id); }, 0);
 
   return card;
 }
 
-/* ---------- Rating UI ---------- */
+/* ---------- Menu Modal (popup) ---------- */
+function openMenuModal(restaurantId){
+  const r = RESTAURANTS.find(x => x.id === restaurantId);
+  if(!r) return;
+  const location = load(STORAGE.LOCATION) || "";
+  const branch = r.branches.find(b => b.location.toLowerCase() === location.toLowerCase()) || r.branches[0];
+
+  $("modalRestaurantName").textContent = r.name;
+  $("modalBranchInfo").textContent = `Branch: ${branch.location} • ${branch.distance} km away`;
+  const ul = $("modalMenuList");
+  ul.innerHTML = "";
+  r.menu.forEach(m => {
+    const li = document.createElement("li");
+    li.innerHTML = `${m.name} <span>₹${m.price}</span> <button onclick="addToCart('${r.id}','${m.id}', ${branch.distance})">Add</button>`;
+    ul.appendChild(li);
+  });
+  $("menuModal").classList.remove("hidden");
+}
+if($("closeMenuBtn")) $("closeMenuBtn").addEventListener("click", () => $("menuModal").classList.add("hidden"));
+
+/* ---------- Ratings ---------- */
 function renderStars(id, value){
   const container = document.getElementById(`stars-${id}`);
   if(!container) return;
@@ -211,7 +216,7 @@ function renderStars(id, value){
     container.appendChild(span);
   }
 }
-function attachStarHandlers(id, name){
+function attachStarHandlers(id){
   const container = document.getElementById(`stars-${id}`);
   if(!container) return;
   container.querySelectorAll(".star").forEach(s => {
@@ -220,49 +225,28 @@ function attachStarHandlers(id, name){
       const ratings = load(STORAGE.RATINGS) || {};
       ratings[id] = v;
       save(STORAGE.RATINGS, ratings);
-      // update visible rating in card
-      const cardStars = s.closest(".card");
-      if(cardStars) cardStars.querySelector(".star-row strong").textContent = v.toFixed(1);
+      // update display
+      const card = s.closest(".card");
+      if(card) card.querySelector(".star-row strong").textContent = v.toFixed(1);
       renderStars(id, v);
     };
   });
 }
 
-/* ---------- View menu (simple modal-like behavior) ---------- */
-function viewMenu(restaurantId){
-  // scroll to restaurant card or open a focused view - here we just highlight the card
-  const cards = Array.from(document.querySelectorAll(".card"));
-  const target = cards.find(c => c.querySelector(`#stars-${restaurantId}`));
-  if(target){
-    target.scrollIntoView({behavior:"smooth", block:"center"});
-    target.style.boxShadow = "0 18px 40px rgba(255,107,107,0.12)";
-    setTimeout(()=> target.style.boxShadow = "var(--shadow)", 1000);
-  }
-}
-
-/* ---------- Cart management ---------- */
+/* ---------- Cart functions ---------- */
 function restoreCart(){
-  const stored = load(STORAGE.CART) || [];
-  window.CART = stored;
+  window.CART = load(STORAGE.CART) || [];
   updateCartUI();
 }
-function saveCart(){
-  save(STORAGE.CART, window.CART || []);
-}
+function saveCart(){ save(STORAGE.CART, window.CART || []); }
 
-/* Add to cart by restaurantId + menuId */
-function addToCart(restaurantId, menuId){
-  // find restaurant and menu item
+/* Add to cart - passed branchDistance for delivery fee calc */
+function addToCart(restaurantId, menuId, branchDistance = 5){
   const r = RESTAURANTS.find(x => x.id === restaurantId);
   if(!r) return;
   const item = r.menu.find(m => m.id === menuId);
   if(!item) return;
-  // determine delivery distance from branch at chosen location
-  const location = load(STORAGE.LOCATION);
-  const branch = r.branches.find(b => b.location.toLowerCase() === (location||"").toLowerCase()) || r.branches[0];
-  const delivery = branch ? branch.distance * 10 : 50; // ₹10 per km fallback 50
-
-  // push to cart: keep restaurant name, itemname, price, delivery
+  const delivery = branchDistance * 10;
   window.CART = window.CART || [];
   window.CART.push({
     cartId: Date.now() + "-" + Math.random().toString(36).slice(2,7),
@@ -275,18 +259,20 @@ function addToCart(restaurantId, menuId){
   });
   saveCart();
   updateCartUI();
-  // small feedback
+  // feedback
   animateAdd();
+  // close menu modal if open
+  if($("menuModal")) $("menuModal").classList.add("hidden");
 }
 
-/* Animate add feedback */
+/* small animate cart button */
 function animateAdd(){
   const btn = document.querySelector(".cart-btn");
   if(!btn) return;
-  btn.animate([{transform:"scale(1)"},{transform:"scale(1.06)"},{transform:"scale(1)"}], {duration:300});
+  btn.animate([{transform:"scale(1)"},{transform:"scale(1.08)"},{transform:"scale(1)"}], {duration:300});
 }
 
-/* Update cart UI */
+/* update cart UI */
 function updateCartUI(){
   const itemsDiv = $("cartItems");
   itemsDiv.innerHTML = "";
@@ -294,7 +280,7 @@ function updateCartUI(){
   if(cart.length === 0){
     itemsDiv.innerHTML = `<p class="muted">Your cart is empty — add tasty items 🍟</p>`;
   } else {
-    cart.forEach((c, idx) => {
+    cart.forEach(c => {
       const div = document.createElement("div");
       div.className = "cart-item";
       div.innerHTML = `
@@ -312,7 +298,7 @@ function updateCartUI(){
     });
   }
 
-  // calculate totals
+  // totals
   const sub = cart.reduce((s,i) => s + i.price, 0);
   const delivery = cart.reduce((s,i) => s + i.deliveryFee, 0);
   const coupon = load(STORAGE.COUPON) || { code: "", discountVal: 0 };
@@ -327,46 +313,31 @@ function updateCartUI(){
   $("cartCount").textContent = cart.length;
 }
 
-/* remove cart item */
+/* remove an item */
 function removeCart(cartId){
   window.CART = (window.CART || []).filter(i => i.cartId !== cartId);
   saveCart();
   updateCartUI();
 }
 
-/* ---------- Cart / Coupon / Checkout ---------- */
+/* ---------- Cart / Coupon / Checkout bindings ---------- */
 function bindCartButtons(){
-  $("closeCart").addEventListener("click", () => $("cartDrawer").classList.remove("open"));
-  $("applyCouponBtn").addEventListener("click", applyCoupon);
-  $("checkoutBtn").addEventListener("click", () => {
-    // show payment modal with summary
-    const sub = parseFloat($("subTotal").textContent) || 0;
-    const delivery = parseFloat($("deliveryFee").textContent) || 0;
-    const discount = parseFloat($("discountVal").textContent) || 0;
-    const total = parseFloat($("grandTotal").textContent) || 0;
-    if((window.CART || []).length === 0){ alert("Your cart is empty!"); return; }
-
-    const html = `
-      <p>Subtotal: ₹${sub.toFixed(2)}</p>
-      <p>Delivery: ₹${delivery.toFixed(2)}</p>
-      <p>Discount: -₹${discount.toFixed(2)}</p>
-      <hr/>
-      <h3>Total: ₹${total.toFixed(2)}</h3>
-    `;
-    $("paymentSummary").innerHTML = html;
-    $("paymentModal").classList.remove("hidden");
+  if($("closeCart")) $("closeCart").addEventListener("click", () => $("cartDrawer").classList.remove("open"));
+  if($("applyCouponBtn")) $("applyCouponBtn").addEventListener("click", applyCoupon);
+  if($("checkoutBtn")) $("checkoutBtn").addEventListener("click", () => {
+    const cart = window.CART || [];
+    if(cart.length === 0){ alert("Your cart is empty!"); return; }
+    showPaymentModal();
   });
 
-  // payment modal actions
-  $("cancelPay").addEventListener("click", () => $("paymentModal").classList.add("hidden"));
-  $("confirmPay").addEventListener("click", confirmPayment);
+  if($("cancelPay")) $("cancelPay").addEventListener("click", () => $("paymentModal").classList.add("hidden"));
+  if($("confirmPay")) $("confirmPay").addEventListener("click", confirmPayment);
 }
 
-/* Apply coupon codes */
+/* ---------- Coupon logic ---------- */
 function applyCoupon(){
   const code = ($("couponInput").value || "").trim().toUpperCase();
   if(!code){ alert("Enter a coupon code"); return; }
-  // codes: FOOD10 => 10% of subtotal, WELCOME15 => 15% subtotal, FREESHIP => free delivery
   const cart = window.CART || [];
   const sub = cart.reduce((s,i) => s + i.price, 0);
   let discountVal = 0;
@@ -375,7 +346,6 @@ function applyCoupon(){
   } else if(code === "WELCOME15"){
     discountVal = sub * 0.15;
   } else if(code === "FREESHIP"){
-    // free delivery = eliminate delivery fees
     discountVal = cart.reduce((s,i) => s + i.deliveryFee, 0);
   } else {
     alert("Invalid coupon");
@@ -384,30 +354,45 @@ function applyCoupon(){
   save(STORAGE.COUPON, { code, discountVal });
   updateCartUI();
   alert(`Coupon ${code} applied!`);
-  $("couponInput").value = "";
+  if($("couponInput")) $("couponInput").value = "";
 }
 
-/* Confirm payment (mock) */
+/* ---------- Payment modal ---------- */
+function showPaymentModal(){
+  const sub = parseFloat($("subTotal").textContent) || 0;
+  const delivery = parseFloat($("deliveryFee").textContent) || 0;
+  const discount = parseFloat($("discountVal").textContent) || 0;
+  const total = parseFloat($("grandTotal").textContent) || 0;
+  $("paymentSummary").innerHTML = `
+    <p>Subtotal: ₹${sub.toFixed(2)}</p>
+    <p>Delivery: ₹${delivery.toFixed(2)}</p>
+    <p>Discount: -₹${discount.toFixed(2)}</p>
+    <hr/>
+    <h3>Total: ₹${total.toFixed(2)}</h3>
+  `;
+  $("paymentModal").classList.remove("hidden");
+}
+
 function confirmPayment(){
-  // simulate processing...
   $("confirmPay").disabled = true;
   $("confirmPay").textContent = "Processing...";
   setTimeout(() => {
     $("confirmPay").disabled = false;
     $("confirmPay").textContent = "Pay Now";
     $("paymentModal").classList.add("hidden");
-    // success
-    const total = $("grandTotal").textContent;
-    alert(`Payment successful! ₹${total} paid 🎉`);
-    // clear cart and coupon
+    alert(`Payment successful! ₹${$("grandTotal").textContent} paid 🎉`);
     window.CART = [];
     save(STORAGE.CART, []);
     localStorage.removeItem(STORAGE.COUPON);
     updateCartUI();
     $("cartDrawer").classList.remove("open");
-  }, 1000);
+  }, 900);
 }
 
-/* ---------- Helpers for DOM access in this file ---------- */
+/* ---------- utility wrappers ---------- */
+function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+function load(k){ return JSON.parse(localStorage.getItem(k) || "null"); }
 function $(id){ return document.getElementById(id); }
+ocument.getElementById(id); }
+
 
