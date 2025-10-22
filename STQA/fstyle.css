@@ -1,0 +1,134 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background: #fffdf7;
+  color: #333;
+}
+
+header {
+  background: linear-gradient(90deg, #ff6b35, #ff9248);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+h1 {
+  margin: 0;
+}
+
+input, select, button {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+button {
+  background: #ff6b35;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ff834f;
+}
+
+.restaurant-grid, .menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.card, .restaurant-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 15px;
+}
+
+.card img, .restaurant-card img {
+  width: 100%;
+  height: 160px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.rating {
+  color: gold;
+  font-size: 1.1rem;
+}
+
+.cart {
+  position: fixed;
+  top: 70px;
+  right: -350px;
+  width: 300px;
+  background: white;
+  border-left: 3px solid #ff6b35;
+  height: calc(100% - 70px);
+  padding: 15px;
+  transition: right 0.4s;
+  overflow-y: auto;
+}
+
+.cart.open {
+  right: 0;
+}
+
+footer {
+  background: #222;
+  color: white;
+  text-align: center;
+  padding: 10px;
+}
+
+/* Sign-in Page */
+.signin-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #ff6b35, #ff9e57);
+}
+
+.signin-container {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  width: 300px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.signin-container h2 {
+  margin-bottom: 20px;
+}
+
+.star-rating {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.star {
+  font-size: 1.4rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.star:hover,
+.star.active {
+  color: gold;
+}
