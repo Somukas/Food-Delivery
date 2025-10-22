@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"> QuickEats</div>
+    <div class="brand">🍕 QuickEats</div>
 
     <div class="controls">
       <select id="locationSelect" title="Choose location">
@@ -38,6 +38,18 @@
     <section id="restaurantGrid" class="grid"></section>
   </main>
 
+  <!-- Menu Modal (popup) -->
+  <div id="menuModal" class="modal hidden">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="modalRestaurantName">Menu</h3>
+        <button id="closeMenuBtn">✕</button>
+      </div>
+      <p id="modalBranchInfo" class="muted"></p>
+      <ul id="modalMenuList" class="menu-list"></ul>
+    </div>
+  </div>
+
   <!-- Cart Drawer -->
   <aside id="cartDrawer" class="cart-drawer">
     <div class="cart-header">
@@ -57,7 +69,7 @@
       <input id="couponInput" placeholder="Coupon (FOOD10, WELCOME15, FREESHIP)" />
       <div class="cart-actions">
         <button id="applyCouponBtn">Apply Coupon</button>
-        <button id="checkoutBtn" class="primary">Checkout</button>
+        <button id="checkoutBtn" class="primary">Proceed to Payment</button>
       </div>
     </div>
   </aside>
