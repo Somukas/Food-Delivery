@@ -1,30 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>QuickEats - Sign In</title>
-  <link rel="stylesheet" href="fstyle.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuickEats — Sign In</title>
+  <link rel="stylesheet" href="fstyle.css" />
 </head>
-<body class="signin-body">
-  <div class="signin-container">
-    <h1>🍴 QuickEats</h1>
-    <h2>Sign In</h2>
-    <form id="signin-form">
-      <input type="text" id="username" placeholder="Enter username" required>
-      <input type="password" id="password" placeholder="Enter password" required>
-      <button type="submit">Sign In</button>
-    </form>
+<body class="login-page">
+  <div class="login-card">
+    <div class="logo">🍔 QuickEats</div>
+    <h2>Welcome back!</h2>
+
+    <input id="username" placeholder="Username" />
+    <input id="password" placeholder="Password" type="password" />
+
+    <button id="loginBtn">Sign in</button>
+    <p class="muted">Use <strong>admin / 1234</strong> to sign in (demo)</p>
+    <p id="loginMsg" class="error"></p>
   </div>
+
+  <script src="script.js"></script>
   <script>
-    document.getElementById("signin-form").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const username = document.getElementById("username").value;
-      if (username.trim() !== "") {
-        localStorage.setItem("username", username);
-        window.location.href = "home.html";
-      }
+    // bind login UI
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      login();
+    });
+    // allow Enter key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') login();
     });
   </script>
 </body>
 </html>
+
 
