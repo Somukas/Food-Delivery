@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QuickEats — Home</title>
   <link rel="stylesheet" href="fstyle.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">🍕 QuickEats</div>
-
     <div class="controls">
       <select id="locationSelect" title="Choose location">
         <option value="">Choose location</option>
@@ -18,13 +17,10 @@
         <option value="Shree Nagar">Shree Nagar</option>
         <option value="Nagpur">Nagpur</option>
       </select>
-
       <input id="customLocation" placeholder="Or type location (e.g., My Street)" />
       <button id="setLocationBtn">Set</button>
-
       <input id="searchBox" placeholder="Search restaurants or dishes..." />
       <button id="logoutBtn" class="small">Logout</button>
-
       <button id="cartToggle" class="cart-btn">🛒 <span id="cartCount">0</span></button>
     </div>
   </header>
@@ -35,7 +31,8 @@
       <p class="muted">Colorful menus, ratings, coupons & a fun checkout — try it out!</p>
     </section>
 
-    <section id="restaurantGrid" class="restaurant-grid"></section>
+    <!-- THIS DIV IS CRITICAL: JS WILL APPEND RESTAURANTS HERE -->
+    <section id="restaurantGrid" class="grid"></section>
   </main>
 
   <!-- Menu Modal -->
@@ -56,16 +53,13 @@
       <h3>Your Cart</h3>
       <button id="closeCart">✕</button>
     </div>
-
     <div id="cartItems" class="cart-items"></div>
-
     <div class="cart-summary">
       <div>Subtotal: <strong>₹<span id="subTotal">0</span></strong></div>
       <div>Delivery: <strong>₹<span id="deliveryFee">0</span></strong></div>
       <div>Discount: <strong>-₹<span id="discountVal">0</span></strong></div>
       <hr/>
       <div class="total">Total: ₹<span id="grandTotal">0</span></div>
-
       <input id="couponInput" placeholder="Coupon (FOOD10, WELCOME15, FREESHIP)" />
       <div class="cart-actions">
         <button id="applyCouponBtn">Apply Coupon</button>
@@ -93,6 +87,7 @@
   <script src="fscript.js"></script>
 </body>
 </html>
+
 
 
 
