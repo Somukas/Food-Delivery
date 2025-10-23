@@ -25,13 +25,14 @@
     document.getElementById('loginBtn').addEventListener('click', () => {
       login();
     });
-    // allow Enter key
+    // allow Enter key to submit
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') login();
     });
   </script>
 </body>
 </html>
+
 
 
 
