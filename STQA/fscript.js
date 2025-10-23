@@ -7,35 +7,6 @@ const STORAGE = {
   COUPON: "qe_coupon"
 };
 
-const STORAGE_USER = "qe_user_demo";
-
-function login() {
-  const usernameEl = document.getElementById('username');
-  const passwordEl = document.getElementById('password');
-  const msgEl = document.getElementById('loginMsg');
-
-  const user = usernameEl ? usernameEl.value.trim() : '';
-  const pass = passwordEl ? passwordEl.value.trim() : '';
-
-  if (!user || !pass) {
-    if (msgEl) { msgEl.textContent = "Please enter username and password"; }
-    return;
-  }
-
-  // Demo credentials: admin / 1234
-  if (user === 'admin' && pass === '1234') {
-    // save user to localStorage so home page knows who's logged in
-    localStorage.setItem(STORAGE_USER, JSON.stringify({ name: user }));
-
-    // Redirect to home.html — if your main page is index.html, change this to index.html
-    window.location.href = 'home.html';
-  } else {
-    if (msgEl) { msgEl.textContent = "Invalid credentials — use admin / 1234"; }
-  }
-}
-
-// Optional: expose login for inline script to call (already global by definition)
-window.login = login;
 /* ---------- Sample data ---------- */
 const RESTAURANTS = [
   {
@@ -422,6 +393,7 @@ function confirmPayment(){
 function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
 function load(k){ return JSON.parse(localStorage.getItem(k) || "null"); }
 function $(id){ return document.getElementById(id); }
+
 
 
 
