@@ -19,19 +19,41 @@
     <p id="loginMsg" class="error"></p>
   </div>
 
-  <script src="fscript.js"></script>
   <script>
-    // bind login UI
-    document.getElementById('loginBtn').addEventListener('click', () => {
-      login();
-    });
-    // allow Enter key to submit
+    // ---- inline login logic ----
+
+    // When user clicks "Sign in" button
+    document.getElementById('loginBtn').addEventListener('click', login);
+
+    // When user presses Enter key inside an input
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') login();
     });
+
+    function login() {
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+      const msg = document.getElementById('loginMsg');
+
+      if (!user || !pass) {
+        msg.textContent = "Please enter both username and password.";
+        return;
+      }
+
+      if (user === 'admin' && pass === '1234') {
+        // Save login info locally (optional)
+        localStorage.setItem('qe_user_demo', JSON.stringify({ name: user }));
+
+        // ✅ Redirect to home.html (or index.html if that's your main page)
+        window.location.href = 'home.html';
+      } else {
+        msg.textContent = "Invalid credentials — use admin / 1234";
+      }
+    }
   </script>
 </body>
 </html>
+
 
 
 
