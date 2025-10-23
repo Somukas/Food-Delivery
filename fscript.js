@@ -123,15 +123,41 @@ function renderWelcome(){
 }
 
 /* ---------- Render Restaurants (grid) ---------- */
-function renderRestaurants(query = ""){
+function renderRestaurants(query = "") {
   const grid = $("restaurantGrid");
-  if(!grid) return;
+  if (!grid) return;
   grid.innerHTML = "";
-  const location = load(STORAGE.LOCATION);
-  if(!location){
-    grid.innerHTML = `<div class="card"><div class="hero">📍</div><h3>Pick a location</h3><p class="muted">Select a location to see nearby branches</p></div>`;
+
+  const location = (load(STORAGE.LOCATION) || "").trim();
+  if (!location) {
+    grid.innerHTML = `
+      <div class="card">
+        <div class="hero">📍</div>
+        <h3>Pick a location</h3>
+        <p class="muted">Select a location to see nearby branches</p>
+      </div>`;
     return;
   }
+
+  // Case-insensitive matching
+  const results = RESTAURANTS.filter(r =>
+    r.branches.some(b => b.location.toLowerCase() === location.toLowerCase()) ||
+    (query && (r.name.toLowerCase().includes(query) || r.menu.some(m => m.name.toLowerCase().includes(query))))
+  );
+
+  if (results.length === 0) {
+    grid.innerHTML = `
+      <div class="card">
+        <div class="hero">😔</div>
+        <h3>No restaurants found</h3>
+        <p class="muted">Try another location or clear search</p>
+      </div>`;
+    return;
+  }
+
+  results.forEach(r => grid.appendChild(makeRestaurantCard(r, location, query)));
+}
+
 
   const results = RESTAURANTS.filter(r => {
     const hasBranch = r.branches.some(b => b.location.toLowerCase() === location.toLowerCase());
@@ -393,6 +419,7 @@ function confirmPayment(){
 function save(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
 function load(k){ return JSON.parse(localStorage.getItem(k) || "null"); }
 function $(id){ return document.getElementById(id); }
+
 
 
 
