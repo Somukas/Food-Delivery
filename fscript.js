@@ -1,5 +1,4 @@
-/* ---------- Storage keys ---------- */
-const STORAGE = {
+const STORAGE = { 
   USER: "qe_user",
   CART: "qe_cart",
   LOCATION: "qe_location",
@@ -7,7 +6,6 @@ const STORAGE = {
   COUPON: "qe_coupon"
 };
 
-/* ---------- Restaurant Data ---------- */
 const RESTAURANTS = [
   {
     id: "burger-hub",
@@ -55,7 +53,6 @@ const RESTAURANTS = [
   }
 ];
 
-/* ---------- Helpers ---------- */
 const $ = id => document.getElementById(id);
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 const load = k => JSON.parse(localStorage.getItem(k) || "null");
@@ -82,8 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const path = location.pathname;
   const user = load(STORAGE.USER);
 
+  // redirect unauthorized users
+  if (path.endsWith("home.html") && !user) {
+    location.href = "food.html";
+    return;
+  }
 
-  // Bind controls only on home page
   if (path.endsWith("home.html")) {
     bindTopControls();
     renderWelcome();
@@ -109,7 +110,7 @@ function bindTopControls() {
 
   $("logoutBtn").addEventListener("click", () => {
     localStorage.clear();
-    location.href = "home.html";
+    location.href = "food.html";
   });
 
   $("searchBox").addEventListener("input", e => {
@@ -189,8 +190,7 @@ function openMenu(id) {
 
   $("modalRestaurantName").textContent = r.name;
   $("modalMenuList").innerHTML = "";
-  $("modalBranchInfo").textContent =
-    "Serving from your selected location’s branch.";
+  $("modalBranchInfo").textContent = "Serving from your selected location’s branch.";
 
   r.menu.forEach(item => {
     const li = document.createElement("li");
@@ -290,6 +290,7 @@ function openPayment() {
     restoreCart();
   };
 }
+
 
 
 
