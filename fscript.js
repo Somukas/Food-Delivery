@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Redirect unauthenticated users
   if (path.endsWith("home.html") && !user) {
-    location.href = "index.html";
+    location.href = "home.html";
     return;
   }
 
@@ -114,7 +114,7 @@ function bindTopControls() {
 
   $("logoutBtn").addEventListener("click", () => {
     localStorage.clear();
-    location.href = "index.html";
+    location.href = "home.html";
   });
 
   $("searchBox").addEventListener("input", e => {
@@ -295,6 +295,7 @@ function openPayment() {
     restoreCart();
   };
 }
+
 
 
 
