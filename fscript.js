@@ -7,7 +7,7 @@ const STORAGE = {
   COUPON: "qe_coupon"
 };
 
-/* ---------- Sample data ---------- */
+/* ---------- Restaurant Data ---------- */
 const RESTAURANTS = [
   {
     id: "burger-hub",
@@ -68,11 +68,10 @@ function login() {
     $("loginMsg").textContent = "Enter credentials";
     return;
   }
-
   if (user === "admin" && pass === "1234") {
     save(STORAGE.USER, { name: user });
     if (!load(STORAGE.CART)) save(STORAGE.CART, []);
-    location.href = "index.html";
+    location.href = "home.html";
   } else {
     $("loginMsg").textContent = "Invalid credentials — use admin / 1234";
   }
@@ -80,329 +79,223 @@ function login() {
 
 /* ---------- Init ---------- */
 document.addEventListener("DOMContentLoaded", () => {
+  const path = location.pathname;
   const user = load(STORAGE.USER);
 
-  // redirect to login if not logged in
-  if (!user && location.pathname.endsWith("index.html")) {
-    location.href = "login.html";
+  // Redirect unauthenticated users
+  if (path.endsWith("home.html") && !user) {
+    location.href = "index.html";
     return;
   }
 
-  // Bind topbar controls if present
-  if ($("setLocationBtn")) bindTopControls();
-
-  // Initialize UI
-  renderWelcome();
-  renderRestaurants();
-  restoreCart();
-  bindCartButtons();
+  // Bind controls only on home page
+  if (path.endsWith("home.html")) {
+    bindTopControls();
+    renderWelcome();
+    renderRestaurants();
+    restoreCart();
+    bindCartButtons();
+  }
 });
 
-/* ---------- Topbar Controls ---------- */
+/* ---------- Controls ---------- */
 function bindTopControls() {
-  const setBtn = $("setLocationBtn");
-  const select = $("locationSelect");
-  const custom = $("customLocation");
+  $("setLocationBtn").addEventListener("click", () => {
+    const selected = $("locationSelect").value.trim();
+    const custom = $("customLocation").value.trim();
+    const loc = custom || selected;
+    if (!loc) return alert("Please choose or enter a location");
 
-  setBtn?.addEventListener("click", () => {
-    const final = (custom.value || select.value).trim();
-    if (!final) {
-      alert("Choose or enter a location first");
-      return;
-    }
-    save(STORAGE.LOCATION, final);
-    custom.value = "";
+    save(STORAGE.LOCATION, loc);
+    $("customLocation").value = "";
     renderWelcome();
     renderRestaurants();
   });
 
-  $("logoutBtn")?.addEventListener("click", () => {
-    localStorage.removeItem(STORAGE.USER);
-    localStorage.removeItem(STORAGE.CART);
-    location.href = "login.html";
+  $("logoutBtn").addEventListener("click", () => {
+    localStorage.clear();
+    location.href = "index.html";
   });
 
-  $("searchBox")?.addEventListener("input", e => {
-    const query = e.target.value.trim().toLowerCase();
-    renderRestaurants(query);
+  $("searchBox").addEventListener("input", e => {
+    renderRestaurants(e.target.value.trim().toLowerCase());
   });
 
-  $("cartToggle")?.addEventListener("click", () =>
-    $("cartDrawer").classList.toggle("open")
-  );
+  $("cartToggle").addEventListener("click", () => {
+    $("cartDrawer").classList.toggle("open");
+  });
 }
 
 /* ---------- Welcome ---------- */
 function renderWelcome() {
   const user = load(STORAGE.USER);
   const loc = load(STORAGE.LOCATION);
-  $("welcomeText").textContent = user
+  const msg = user
     ? `Hello ${user.name}! ${loc ? "Location: " + loc : "Set your location"}`
-    : `Hello! Choose your location to begin`;
+    : "Welcome! Sign in to continue.";
+  $("welcomeText").textContent = msg;
 }
 
-/* ---------- Render Restaurants ---------- */
+/* ---------- Restaurant Rendering ---------- */
 function renderRestaurants(query = "") {
   const grid = $("restaurantGrid");
   if (!grid) return;
   grid.innerHTML = "";
 
-  const location = (load(STORAGE.LOCATION) || "").trim().toLowerCase();
+  const location = load(STORAGE.LOCATION);
   if (!location) {
-    grid.innerHTML = `<div class="card"><div class="hero">📍</div><h3>Pick a location</h3><p class="muted">Select or type a location to see nearby restaurants</p></div>`;
+    grid.innerHTML = `
+      <div class="card">
+        <div class="hero">📍</div>
+        <h3>Pick a location</h3>
+        <p class="muted">Select or type a location to see nearby restaurants</p>
+      </div>`;
     return;
   }
 
   const results = RESTAURANTS.filter(r =>
-    r.branches.some(b => b.location.toLowerCase() === location) ||
-    (query && (
+    r.branches.some(b => b.location.toLowerCase() === location.toLowerCase()) &&
+    (!query ||
       r.name.toLowerCase().includes(query) ||
-      r.menu.some(m => m.name.toLowerCase().includes(query))
-    ))
+      r.menu.some(m => m.name.toLowerCase().includes(query)))
   );
 
-  if (!results.length) {
-    grid.innerHTML = `<div class="card"><div class="hero">😔</div><h3>No restaurants found</h3><p class="muted">Try another location or clear your search</p></div>`;
+  if (results.length === 0) {
+    grid.innerHTML = `
+      <div class="card">
+        <div class="hero">😔</div>
+        <h3>No restaurants found</h3>
+        <p class="muted">Try another location or clear your search</p>
+      </div>`;
     return;
   }
 
-  results.forEach(r => grid.appendChild(makeRestaurantCard(r, location, query)));
+  results.forEach(r => grid.appendChild(makeRestaurantCard(r, location)));
 }
 
-/* ---------- Restaurant Card ---------- */
-function makeRestaurantCard(r, location, query) {
-  const card = document.createElement("div");
-  card.className = "card";
-
-  const branch = r.branches.find(b => b.location.toLowerCase() === location) || r.branches[0];
-  const ratings = load(STORAGE.RATINGS) || {};
-  const savedRating = ratings[r.id] ?? r.rating;
-
-  card.innerHTML = `
+function makeRestaurantCard(r, location) {
+  const branch = r.branches.find(b => b.location.toLowerCase() === location.toLowerCase());
+  const div = document.createElement("div");
+  div.className = "card restaurant-card";
+  div.innerHTML = `
     <div class="hero">${r.hero}</div>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h3>${r.name}</h3>
-      <div class="star-row"><span class="star">★</span> <strong>${savedRating.toFixed(1)}</strong></div>
-    </div>
-    <div class="meta">Branch: ${branch.location} • ${branch.distance} km away</div>
-    <ul class="menu-list">
-      ${r.menu
-        .filter(m => !query || r.name.toLowerCase().includes(query) || m.name.toLowerCase().includes(query))
-        .map(m => `<li>${m.name} <span>₹${m.price}</span> <button onclick="openMenuModal('${r.id}')">View</button></li>`).join("")
-      }
-    </ul>
-    <div style="display:flex;gap:8px;align-items:center">
-      <div id="stars-${r.id}" class="star-rating" style="display:flex;gap:6px"></div>
-      <button class="small" onclick="openMenuModal('${r.id}')">Open Menu</button>
-    </div>
+    <h3>${r.name}</h3>
+    <p class="muted">${branch ? branch.distance + " km away" : "Available nearby"}</p>
+    <p>⭐ ${r.rating}</p>
+    <button class="primary" onclick="openMenu('${r.id}')">View Menu</button>
   `;
-
-  setTimeout(() => {
-    renderStars(r.id, savedRating);
-    attachStarHandlers(r.id);
-  }, 0);
-
-  return card;
+  return div;
 }
 
-/* ---------- Menu Modal ---------- */
-function openMenuModal(restaurantId) {
-  const r = RESTAURANTS.find(x => x.id === restaurantId);
+/* ---------- Menu Popup ---------- */
+function openMenu(id) {
+  const r = RESTAURANTS.find(x => x.id === id);
   if (!r) return;
-  const location = (load(STORAGE.LOCATION) || "").trim();
-  const branch = r.branches.find(b => b.location.toLowerCase() === location.toLowerCase()) || r.branches[0];
 
   $("modalRestaurantName").textContent = r.name;
-  $("modalBranchInfo").textContent = `Branch: ${branch.location} • ${branch.distance} km away`;
-  const ul = $("modalMenuList");
-  ul.innerHTML = "";
-  r.menu.forEach(m => {
+  $("modalMenuList").innerHTML = "";
+  $("modalBranchInfo").textContent =
+    "Serving from your selected location’s branch.";
+
+  r.menu.forEach(item => {
     const li = document.createElement("li");
-    li.innerHTML = `${m.name} <span>₹${m.price}</span> <button onclick="addToCart('${r.id}','${m.id}', ${branch.distance})">Add</button>`;
-    ul.appendChild(li);
+    li.innerHTML = `
+      ${item.name} — ₹${item.price}
+      <button onclick="addToCart('${r.id}','${item.id}','${item.name}',${item.price})">Add</button>
+    `;
+    $("modalMenuList").appendChild(li);
   });
 
-  $("menuModal")?.classList.remove("hidden");
-}
-
-$("closeMenuBtn")?.addEventListener("click", () => $("menuModal").classList.add("hidden"));
-
-/* ---------- Ratings ---------- */
-function renderStars(id, value) {
-  const container = $(`stars-${id}`);
-  if (!container) return;
-  container.innerHTML = "";
-  for (let i = 1; i <= 5; i++) {
-    const span = document.createElement("span");
-    span.textContent = "★";
-    span.className = "star";
-    if (i <= Math.round(value)) span.style.color = "#ffd26b";
-    span.dataset.value = i;
-    container.appendChild(span);
-  }
-}
-
-function attachStarHandlers(id) {
-  const container = $(`stars-${id}`);
-  if (!container) return;
-  container.querySelectorAll(".star").forEach(s => {
-    s.onclick = () => {
-      const v = parseInt(s.dataset.value);
-      const ratings = load(STORAGE.RATINGS) || {};
-      ratings[id] = v;
-      save(STORAGE.RATINGS, ratings);
-      renderStars(id, v);
-      const card = s.closest(".card");
-      if (card) card.querySelector(".star-row strong").textContent = v.toFixed(1);
-    };
-  });
+  $("menuModal").classList.remove("hidden");
+  $("closeMenuBtn").onclick = () => $("menuModal").classList.add("hidden");
 }
 
 /* ---------- Cart ---------- */
+function addToCart(rid, mid, name, price) {
+  const cart = load(STORAGE.CART) || [];
+  const existing = cart.find(x => x.mid === mid);
+  if (existing) existing.qty++;
+  else cart.push({ rid, mid, name, price, qty: 1 });
+
+  save(STORAGE.CART, cart);
+  $("cartCount").textContent = cart.reduce((a, b) => a + b.qty, 0);
+  restoreCart();
+}
+
 function restoreCart() {
-  window.CART = load(STORAGE.CART) || [];
-  updateCartUI();
-}
+  const cart = load(STORAGE.CART) || [];
+  const cont = $("cartItems");
+  if (!cont) return;
+  cont.innerHTML = "";
 
-function saveCart() {
-  save(STORAGE.CART, window.CART || []);
-}
-
-function addToCart(restaurantId, menuId, branchDistance = 5) {
-  const r = RESTAURANTS.find(x => x.id === restaurantId);
-  if (!r) return;
-  const item = r.menu.find(m => m.id === menuId);
-  if (!item) return;
-
-  const delivery = branchDistance * 10;
-  window.CART = window.CART || [];
-  window.CART.push({
-    cartId: Date.now() + "-" + Math.random().toString(36).slice(2,7),
-    restaurantId,
-    restaurantName: r.name,
-    itemId: item.id,
-    itemName: item.name,
-    price: item.price,
-    deliveryFee: delivery
+  cart.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "cart-item";
+    div.innerHTML = `
+      ${item.name} — ₹${item.price} × ${item.qty}
+      <button onclick="removeItem('${item.mid}')">−</button>
+    `;
+    cont.appendChild(div);
   });
-
-  saveCart();
-  updateCartUI();
-  animateAdd();
-  $("menuModal")?.classList.add("hidden");
+  updateCartTotals();
 }
 
-function animateAdd() {
-  const btn = document.querySelector(".cart-btn");
-  btn?.animate([{transform:"scale(1)"},{transform:"scale(1.08)"},{transform:"scale(1)"}], {duration:300});
+function removeItem(mid) {
+  let cart = load(STORAGE.CART) || [];
+  cart = cart.filter(i => i.mid !== mid);
+  save(STORAGE.CART, cart);
+  restoreCart();
 }
 
-function updateCartUI() {
-  const itemsDiv = $("cartItems");
-  if (!itemsDiv) return;
-  itemsDiv.innerHTML = "";
+/* ---------- Cart Totals ---------- */
+function updateCartTotals() {
+  const cart = load(STORAGE.CART) || [];
+  const sub = cart.reduce((a, b) => a + b.price * b.qty, 0);
+  const delivery = sub > 500 ? 0 : 40;
+  const coupon = load(STORAGE.COUPON) || {};
+  const discount = coupon.amount || 0;
+  const total = Math.max(0, sub + delivery - discount);
 
-  const cart = window.CART || [];
-  if (!cart.length) {
-    itemsDiv.innerHTML = `<p class="muted">Your cart is empty 🍟</p>`;
-  } else {
-    cart.forEach(c => {
-      const div = document.createElement("div");
-      div.className = "cart-item";
-      div.innerHTML = `
-        <div><strong>${c.itemName}</strong><div class="muted">${c.restaurantName}</div></div>
-        <div style="text-align:right">
-          <div>₹${c.price}</div>
-          <div class="muted">Del: ₹${c.deliveryFee}</div>
-          <div style="margin-top:8px"><button onclick="removeCart('${c.cartId}')">Remove</button></div>
-        </div>`;
-      itemsDiv.appendChild(div);
-    });
-  }
-
-  const sub = cart.reduce((s,i)=>s+i.price,0);
-  const delivery = cart.reduce((s,i)=>s+i.deliveryFee,0);
-  const coupon = load(STORAGE.COUPON) || {code:"", discountVal:0};
-  const discount = coupon.discountVal || 0;
-  const grand = Math.max(0, sub+delivery-discount);
-
-  $("subTotal")?.textContent = sub.toFixed(2);
-  $("deliveryFee")?.textContent = delivery.toFixed(2);
-  $("discountVal")?.textContent = discount.toFixed(2);
-  $("grandTotal")?.textContent = grand.toFixed(2);
-  $("cartCount")?.textContent = cart.length;
+  $("subTotal").textContent = sub;
+  $("deliveryFee").textContent = delivery;
+  $("discountVal").textContent = discount;
+  $("grandTotal").textContent = total;
 }
 
-function removeCart(cartId) {
-  window.CART = (window.CART || []).filter(i => i.cartId !== cartId);
-  saveCart();
-  updateCartUI();
-}
+/* ---------- Coupon ---------- */
+$("applyCouponBtn")?.addEventListener("click", () => {
+  const val = $("couponInput").value.trim().toUpperCase();
+  let discount = 0;
+  if (val === "FOOD10") discount = 50;
+  else if (val === "WELCOME15") discount = 75;
+  else if (val === "FREESHIP") discount = 40;
+  else return alert("Invalid coupon code");
 
-/* ---------- Cart / Coupon / Checkout ---------- */
+  save(STORAGE.COUPON, { code: val, amount: discount });
+  updateCartTotals();
+  alert(`Coupon ${val} applied!`);
+});
+
+/* ---------- Checkout ---------- */
 function bindCartButtons() {
-  $("closeCart")?.addEventListener("click", () => $("cartDrawer").classList.remove("open"));
-  $("applyCouponBtn")?.addEventListener("click", applyCoupon);
-  $("checkoutBtn")?.addEventListener("click", () => {
-    if (!(window.CART || []).length) { alert("Cart is empty!"); return; }
-    showPaymentModal();
-  });
-  $("cancelPay")?.addEventListener("click", () => $("paymentModal").classList.add("hidden"));
-  $("confirmPay")?.addEventListener("click", confirmPayment);
+  $("closeCart").onclick = () => $("cartDrawer").classList.remove("open");
+  $("checkoutBtn").onclick = () => openPayment();
 }
 
-function applyCoupon() {
-  const code = ($("couponInput")?.value || "").trim().toUpperCase();
-  if (!code) { alert("Enter a coupon code"); return; }
+function openPayment() {
+  const total = $("grandTotal").textContent;
+  $("paymentSummary").innerHTML = `<p>Total payable: ₹${total}</p>`;
+  $("paymentModal").classList.remove("hidden");
 
-  const cart = window.CART || [];
-  const sub = cart.reduce((s,i)=>s+i.price,0);
-  let discountVal = 0;
-
-  if (code === "FOOD10") discountVal = sub*0.10;
-  else if (code === "WELCOME15") discountVal = sub*0.15;
-  else if (code === "FREESHIP") discountVal = cart.reduce((s,i)=>s+i.deliveryFee,0);
-  else { alert("Invalid coupon"); return; }
-
-  save(STORAGE.COUPON, {code, discountVal});
-  updateCartUI();
-  alert(`Coupon ${code} applied!`);
-  $("couponInput").value = "";
-}
-
-function showPaymentModal() {
-  const sub = parseFloat($("subTotal")?.textContent||0);
-  const delivery = parseFloat($("deliveryFee")?.textContent||0);
-  const discount = parseFloat($("discountVal")?.textContent||0);
-  const total = parseFloat($("grandTotal")?.textContent||0);
-
-  $("paymentSummary").innerHTML = `
-    <p>Subtotal: ₹${sub.toFixed(2)}</p>
-    <p>Delivery: ₹${delivery.toFixed(2)}</p>
-    <p>Discount: -₹${discount.toFixed(2)}</p>
-    <hr/>
-    <h3>Total: ₹${total.toFixed(2)}</h3>
-  `;
-
-  $("paymentModal")?.classList.remove("hidden");
-}
-
-function confirmPayment() {
-  $("confirmPay").disabled = true;
-  $("confirmPay").textContent = "Processing...";
-  setTimeout(() => {
-    $("confirmPay").disabled = false;
-    $("confirmPay").textContent = "Pay Now";
+  $("cancelPay").onclick = () => $("paymentModal").classList.add("hidden");
+  $("confirmPay").onclick = () => {
+    alert("✅ Payment Successful! Enjoy your meal!");
+    localStorage.removeItem(STORAGE.CART);
     $("paymentModal").classList.add("hidden");
-
-    alert(`Payment successful! ₹${$("grandTotal")?.textContent} paid 🎉`);
-    window.CART = [];
-    save(STORAGE.CART, []);
-    localStorage.removeItem(STORAGE.COUPON);
-    updateCartUI();
-    $("cartDrawer")?.classList.remove("open");
-  }, 900);
+    restoreCart();
+  };
 }
+
 
 
 
