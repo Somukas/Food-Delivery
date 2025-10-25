@@ -82,11 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const path = location.pathname;
   const user = load(STORAGE.USER);
 
-  // Redirect unauthenticated users
-  if (path.endsWith("home.html") && !user) {
-    location.href = "home.html";
-    return;
-  }
 
   // Bind controls only on home page
   if (path.endsWith("home.html")) {
@@ -295,6 +290,7 @@ function openPayment() {
     restoreCart();
   };
 }
+
 
 
 
