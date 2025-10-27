@@ -1,7 +1,7 @@
 // --- Check Login ---
 const user = localStorage.getItem("loggedInUser");
 if (!user) {
-  window.location.href = "food.html";
+  window.location.href = "Food.html";
 }
 
 // --- Elements ---
@@ -112,6 +112,7 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
   localStorage.removeItem("loggedInUser");
   window.location.href = "food.html";
 });
+
 
 
 
