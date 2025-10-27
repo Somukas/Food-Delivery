@@ -1,59 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>QuickEats — Sign In</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickEats — Login</title>
   <link rel="stylesheet" href="fstyle.css" />
 </head>
-<body class="login-page">
-  <div class="login-card">
-    <div class="logo">🍔 QuickEats</div>
-    <h2>Welcome back!</h2>
+<body>
+  <div class="login-container">
+    <h1>🍕 QuickEats</h1>
+    <p>Sign in to order your favorites!</p>
 
-    <input id="username" placeholder="Username" />
-    <input id="password" placeholder="Password" type="password" />
+    <input type="text" id="username" placeholder="Enter username" required />
+    <input type="password" id="password" placeholder="Enter password" required />
+    <button id="loginBtn">Login</button>
 
-    <button id="loginBtn">Sign in</button>
-    <p class="muted">Use <strong>admin / 1234</strong> to sign in (demo)</p>
-    <p id="loginMsg" class="error"></p>
+    <p class="muted">Demo Login: any name + any password</p>
   </div>
 
   <script>
-    // ---- inline login logic ----
-
-    // When user clicks "Sign in" button
-    document.getElementById('loginBtn').addEventListener('click', login);
-
-    // When user presses Enter key inside an input
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') login();
-    });
-
-    function login() {
-      const user = document.getElementById('username').value.trim();
-      const pass = document.getElementById('password').value.trim();
-      const msg = document.getElementById('loginMsg');
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
 
       if (!user || !pass) {
-        msg.textContent = "Please enter both username and password.";
+        alert("Please enter both username and password!");
         return;
       }
 
-      if (user === 'admin' && pass === '1234') {
-        // Save login info locally (optional)
-        localStorage.setItem('qe_user_demo', JSON.stringify({ name: user }));
-
-        // ✅ Redirect to home.html (or index.html if that's your main page)
-        window.location.href = 'home.html';
-      } else {
-        msg.textContent = "Invalid credentials — use admin / 1234";
-      }
-    }
+      localStorage.setItem("loggedInUser", user);
+      window.location.href = "home.html";
+    });
   </script>
 </body>
 </html>
-
 
 
 
